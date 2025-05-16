@@ -1,9 +1,10 @@
 #include "MyFrame.h"
 #include "BasicPane.h"
-#include "wx/wx.h"
-
+#include <wx/wx.h>
 #include <wx/image.h>
 #include <wx/imagpng.h>
+#include <wx/clipbrd.h>
+
 #include <memory>
 #include <tuple>
 
@@ -118,7 +119,8 @@ void MyApp::readText(const wxImage subImg) const
     char *outText;
     tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
     // Initialize tesseract-ocr with English, without specifying tessdata path
-    if (api->Init(NULL, "eng")) {
+    if (api->Init(NULL, "eng")) 
+    {
         fprintf(stderr, "Could not initialize tesseract.\n");
         exit(1);
     }
@@ -129,9 +131,10 @@ void MyApp::readText(const wxImage subImg) const
     
     // Get OCR result
     outText = api->GetUTF8Text();
-    printf("OCR output:\n%s", outText);
+    printf("%s", outText);
 
     // Destroy used object and release memory
+    
     api->End();
     delete api;
     delete [] outText;
@@ -141,3 +144,4 @@ void MyApp::readText(const wxImage subImg) const
 
 
 IMPLEMENT_APP(MyApp)
+
