@@ -11,9 +11,10 @@ include(${wxWidgets_USE_FILE})
 endif()
 
 
-add_executable(Test ./src/testWX.cpp ./src/MyFrame.cpp ./src/BasicPane.cpp ./src/BasicButton.cpp)
+add_executable(ScreenshotToText ./src/testWX.cpp ./src/MyFrame.cpp ./src/BasicPane.cpp ./src/BasicButton.cpp)
 
-target_link_libraries(Test -llept -ltesseract) # must add this line to link Tesseract and leptonica libs
+target_link_libraries(ScreenshotToText -llept -ltesseract) # must add this line to link Tesseract and leptonica libs
 # Link wxWidgets libraries
-target_link_libraries(Test ${wxWidgets_LIBRARIES})
+target_link_libraries(ScreenshotToText ${wxWidgets_LIBRARIES})
+
 
