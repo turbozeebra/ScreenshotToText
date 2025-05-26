@@ -15,6 +15,7 @@ class MyFrame : public wxFrame
 {
 public:
     MyFrame(wxImage img,int w, int h,std::shared_ptr<std::tuple<int, int, int,int>> squareCoordinates);
+    ~MyFrame();
     void OnDraw(wxPaintEvent &event);
     bool render();
     void close();
@@ -23,7 +24,9 @@ private:
     void OnExit(wxCommandEvent& event);
     
     //wxButton* m_ButtonHello;
-    BasicPane* drawPane;
+    
+    BasicPane* drawPane; 
+    //BasicPane* drawPane;
     BasicButton* button;
     wxImage m_image;
     wxPoint startPos;
