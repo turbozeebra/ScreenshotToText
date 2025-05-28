@@ -29,9 +29,8 @@ public:
      void keyReleased(wxKeyEvent& event);
      */
 private:
-    void OnHello(wxCommandEvent& event);
+    void OnEraseBackground(wxEraseEvent&);
     //void OnExit(wxCommandEvent& event);
-    void OnAbout(wxCommandEvent& event);
     void MouseReleased(wxMouseEvent& event);
     void MousePressed(wxMouseEvent& event);
     void OnMotion(wxMouseEvent& event);

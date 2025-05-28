@@ -8,6 +8,8 @@ wxPanel(parent), squareCoordinates(squareCoordinates)
     Bind(wxEVT_LEFT_DOWN, &BasicPane::MousePressed, this);
     Bind(wxEVT_LEFT_UP, &BasicPane::MouseReleased, this);
     Bind(wxEVT_MOTION, &BasicPane::OnMotion, this);
+    Bind(wxEVT_ERASE_BACKGROUND, &BasicPane::OnEraseBackground, this);
+    
 }
 
 /*
@@ -69,6 +71,13 @@ void BasicPane::paintNow()
  * method so that it can work no matter what type of DC
  * (e.g. wxPaintDC or wxClientDC) is used.
  */
+
+
+void BasicPane::OnEraseBackground(wxEraseEvent&) {
+    // Intentionally empty to prevent flicker
+}
+
+
 void BasicPane::render(wxDC&  dc)
 {
      if (this->rec_to_draw) 

@@ -7,9 +7,10 @@
 #include <wx/dcgraph.h>
 #include <wx/panel.h>
 #include <wx/button.h>
+#include <wx/dcbuffer.h>
+
 #include "BasicPane.h"
 #include "BasicButton.h"
-
 #include <memory>
 class MyFrame : public wxFrame
 {
@@ -22,6 +23,7 @@ public:
  
 private:
     void OnExit(wxCommandEvent& event);
+    void OnEraseBackground(wxEraseEvent&);
     
     //wxButton* m_ButtonHello;
     

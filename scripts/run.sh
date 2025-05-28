@@ -1,2 +1,3 @@
 cd build/
-./ScreenshotToText | xclip -selection clipboard
+./ScreenshotToText 
+#| xclip -selection clipboard

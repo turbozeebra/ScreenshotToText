@@ -1,5 +1,7 @@
 #include "MyFrame.h"
 #include "BasicPane.h"
+#include "ControlPanelFrame.h"
+
 #include <wx/wx.h>
 #include <wx/image.h>
 #include <wx/imagpng.h>
@@ -11,75 +13,150 @@
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
 
+
+
+
+
 class MyApp : public wxApp
 {
 public:
     bool render_loop_on;
+    bool render_loop_screenshot_on;
+
     virtual bool OnInit();
-    void activateRenderLoop(bool on);
     void onIdle(wxIdleEvent& evt);
-    MyFrame* frame;
+    MyFrame* frame_screenshot;
+    ControlPanelFrame* cpFrame;
     wxBitmap m_bmpBackground;
     wxImage screenShot;
-private: 
+    private: 
     std::shared_ptr<std::tuple<int, int, int,int>> squareCoordinates;
-
     wxRect* normal_rect(const int x, const int y, const int w, const int h) const;
     void readText(const wxImage subImg) const ;
-};
+    
+    void initStateHandlers();
+    void handleSelect();
+    void handleAreaSelect();
+    void handleToClipBoard();
+    void handleLatest();
+    
+    void activateRenderLoop(bool on);
+    void activateRenderLoopScreenshot(bool on);
+    
+    std::unordered_map<State, std::function<void()>> stateHandlers;
+
+}; 
 
 bool MyApp::OnInit()
 {
     this->render_loop_on = false;
     
-    
-    // screenshot things 
-    wxScreenDC dc;
-	wxSize size = dc.GetSize();
-	wxBitmap bmp(size.x, size.y);
-	wxMemoryDC memDC(bmp);
-	memDC.Blit(0, 0, size.x, size.y, &dc, 0, 0);
-	memDC.SelectObject(wxNullBitmap);
-    screenShot = bmp.ConvertToImage();
-    //wxInitAllImageHandlers();
-    wxImage::AddHandler(new wxPNGHandler());
-	//img.SaveFile("./test.png", wxBITMAP_TYPE_PNG); this is how you save an image
-    wxCoord w, h;
-    dc.GetSize(&w, &h);
-    // these are the coordinates that are going to be used to determine wanted area of the screen
-    auto ptr = std::make_shared<std::tuple<int, int, int, int>>(-1, 0, 0, 0);
-    squareCoordinates = ptr;
-    frame = new MyFrame(screenShot, w ,h, squareCoordinates);   
-    
-    // Create the button widget
-    frame->ShowFullScreen(true);
-    frame->Show(true);
-
+    cpFrame = new ControlPanelFrame("Control Panel");
+    cpFrame->Show(true);
     activateRenderLoop(true);
+    initStateHandlers();
+    std::cout << "we ready on init" << std::endl;
     return true;
+}
+
+void MyApp::handleSelect(){
+    //std::cout << "handling select" << std::endl;
+    cpFrame->Set_State(State::STATE_Select);
+}
+void MyApp::handleAreaSelect(){
+   //std::cout << "handling area select" << std::endl;
+   activateRenderLoopScreenshot(true);
+
+}
+void MyApp::handleToClipBoard(){
+    std::cout << "handling ToClipBoard" << std::endl;
+    activateRenderLoopScreenshot(false);
+    cpFrame->Set_State(State::STATE_Select);
+}
+void MyApp::handleLatest(){
+    std::cout << "handling latest" << std::endl;
+    cpFrame->Set_State(State::STATE_Select);
+}
+
+void MyApp::initStateHandlers() {
+    std::cout << "handling init" << std::endl;
+    stateHandlers = {
+        { State::STATE_Select,    [this]() { handleSelect(); } },
+        { State::STATE_AreaSelect, [this]() { handleAreaSelect(); } },
+        { State::STATE_ToClipboard, [this]() { handleToClipBoard(); } },
+        { State::STATE_Latest, [this]() { handleLatest(); } }
+    };
+    std::cout << "done" << std::endl;
 }
 
 void MyApp::onIdle(wxIdleEvent& evt)
 {
     
+    State current = cpFrame->Get_State();
+    auto it = stateHandlers.find(cpFrame->Get_State());
+    
+    if (it != stateHandlers.end()) {
+        it->second();
+    } else {
+        std::cout << "unknown state" << std::endl;
+    }
+
     if(this->render_loop_on)
     {
-        activateRenderLoop(frame->render());        
+        //activateRenderLoop(frame->render());        
         evt.RequestMore(); // render continuously, not only once on idle
     }
 }
 
-void MyApp::activateRenderLoop(bool on)
+
+void MyApp::activateRenderLoopScreenshot(bool on)
 {
-    if(on && !render_loop_on)
+    if (on && !render_loop_screenshot_on)
     {
-        Connect( wxID_ANY, wxEVT_IDLE, wxIdleEventHandler(MyApp::onIdle) );
-        render_loop_on = true;
+        cpFrame->Show(false);
+        //cpFrame->Show(false);
+        // initialize screenshot things 
+        wxScreenDC dc;
+        wxSize size = dc.GetSize();
+        wxBitmap bmp(size.x, size.y);
+        wxMemoryDC memDC(bmp);
+        memDC.Blit(0, 0, size.x, size.y, &dc, 0, 0);
+        memDC.SelectObject(wxNullBitmap);
+        screenShot = bmp.ConvertToImage();
+        //wxInitAllImageHandlers();
+        wxImage::AddHandler(new wxPNGHandler());
+        //img.SaveFile("./test.png", wxBITMAP_TYPE_PNG); this is how you save an image
+        wxCoord w, h;
+        dc.GetSize(&w, &h);
+        // these are the coordinates that are going to be used to determine wanted area of the screen
+        auto ptr = std::make_shared<std::tuple<int, int, int, int>>(-1, 0, 0, 0);
+        squareCoordinates = ptr;
+        frame_screenshot = new MyFrame(screenShot, w ,h, squareCoordinates);   
+
+        // Create the button widget
+        frame_screenshot->ShowFullScreen(true);
+        frame_screenshot->Show(true);
+
+        //cpFrame->Raise();  // bring window to front
+        //cpFrame->Show(true); // show the window
+
+
+        render_loop_screenshot_on = true;
+        cpFrame->Raise();
     }
-    else if(!on && render_loop_on)
+
+    if(on && render_loop_screenshot_on)
     {
-        Disconnect( wxEVT_IDLE, wxIdleEventHandler(MyApp::onIdle) );
-        render_loop_on = false; 
+        frame_screenshot->render();
+        cpFrame->Raise();
+        cpFrame->Show();
+          // bring window to front
+        //cpFrame->Show(true); // show the window
+
+    }
+
+    if(!on){
+        render_loop_screenshot_on = false;
         wxRect *rect = normal_rect(std::get<0>(*squareCoordinates),std::get<1>(*squareCoordinates),std::get<2>(*squareCoordinates),std::get<3>(*squareCoordinates));
         if(rect->GetX() > -1)
         {
@@ -87,7 +164,26 @@ void MyApp::activateRenderLoop(bool on)
             readText(subImg);
         }
 
-        frame->close();
+        frame_screenshot->close();
+        delete frame_screenshot;
+        //frame_screenshot = nullptr;
+    }
+}
+
+
+void MyApp::activateRenderLoop(bool on)
+{
+    std::cout<<"we renderloop" << std::endl;
+    if(on && !render_loop_on)
+    {
+        Connect( wxID_ANY, wxEVT_IDLE, wxIdleEventHandler(MyApp::onIdle) );
+        //render_loop_on = true;
+    }
+    else if(!on && render_loop_on)
+    {
+        Disconnect( wxEVT_IDLE, wxIdleEventHandler(MyApp::onIdle) );
+        render_loop_on = false; 
+     
     }
 }
 
