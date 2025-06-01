@@ -34,3 +34,4 @@
 build/*
 libs/*
 .vscode/*
+src/main_old.cpp

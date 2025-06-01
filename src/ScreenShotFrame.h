@@ -1,5 +1,5 @@
-#ifndef MYFRAME_H
-#define MYFRAME_H
+#ifndef SCREENSHOTFRAME_H
+#define SCREENSHOTFRAME_H
 
 #include <wx/wx.h>
 #include <wx/overlay.h>
@@ -12,18 +12,24 @@
 #include "BasicPane.h"
 #include "BasicButton.h"
 #include <memory>
-class MyFrame : public wxFrame
+class ScreenShotFrame : public wxFrame
 {
 public:
-    MyFrame(wxImage img,int w, int h,std::shared_ptr<std::tuple<int, int, int,int>> squareCoordinates);
-    ~MyFrame();
-    void OnDraw(wxPaintEvent &event);
-    bool render();
+    ScreenShotFrame(std::shared_ptr<std::tuple<int, int, int,int>> squareCoordinates,wxWindowID screenshotID);
+    ~ScreenShotFrame();
     void close();
- 
+    void update_screenshot(wxImage img);
+    bool get_mouse_released();
+    void render();
+    void update_screen_size(wxSize size);
+    
 private:
-    void OnExit(wxCommandEvent& event);
+    void OnDraw(wxPaintEvent &event);
+    void OnPaint(wxPaintEvent& event);
+    void OnExit(wxCloseEvent& event);
     void OnEraseBackground(wxEraseEvent&);
+
+
     
     //wxButton* m_ButtonHello;
     
@@ -38,4 +44,4 @@ private:
     void setStartPos(const wxPoint sp) noexcept { startPos = sp; }
 };
 
-#endif // GREETER_H 
+#endif // SCREENSHOTFRAME_H 

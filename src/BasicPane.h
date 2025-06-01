@@ -14,7 +14,10 @@ public:
     void paintEvent(wxPaintEvent & evt);
     void paintNow();
     void render(wxDC& dc);
+    void second_render(wxDC& dc, wxImage img);
+    bool get_mouse_released();
     
+    void update_screen_size(wxSize size);
     //void render(wxDC& dc);
     
     // some useful events
@@ -29,18 +32,28 @@ public:
      void keyReleased(wxKeyEvent& event);
      */
 private:
-    void OnEraseBackground(wxEraseEvent&);
+    wxRect normal_rect( int x,  int y,  int w,  int h) const;
+
     //void OnExit(wxCommandEvent& event);
     void MouseReleased(wxMouseEvent& event);
     void MousePressed(wxMouseEvent& event);
     void OnMotion(wxMouseEvent& event);
     void updateSquareCoordinates();
 
+    wxBitmap bitmap_old;
+    int x_old, y_old;
 
+    wxSize screen_size;
+
+
+    bool bitmap_old_initialized = false;
+
+    wxImage m_subImage;
     std::shared_ptr<std::tuple<int, int, int,int>> squareCoordinates;
     wxPoint startPos;
     int w, h;
     bool rec_to_draw;
+    bool mouse_released;
     void setStartPos(const wxPoint sp) noexcept { startPos = sp; }
 
 };

@@ -1,29 +1,79 @@
 #include "ControlPanelFrame.h"
 
-ControlPanelFrame::ControlPanelFrame(const wxString& title)
-    : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxSize(300, 200))
+ControlPanelFrame::ControlPanelFrame(const wxString& title,wxWindowID cpID)
+: wxFrame(nullptr, cpID, title, wxDefaultPosition, wxSize(300, 150))
 {
     state = State::STATE_Select;
+    
+    wxWindowID bookID = wxIdManager::ReserveId(1);
+    book = new wxSimplebook(this, bookID);
+    
     // Create control panel
-    controlPanel = new wxPanel(this, wxID_ANY);
+    wxWindowID menuControlID = wxIdManager::ReserveId(1);
+    auto menuPanel = new wxPanel(book); 
 
     // Create buttons for control panel
     wxSize buttonSize(200,50); 
-    setAreaButton = new wxButton(controlPanel, ID_Area_Setter, "Set area", wxDefaultPosition, buttonSize, 0);
-    clipboardButton = new wxButton(controlPanel, ID_To_Clip, "To clipboard", wxDefaultPosition, buttonSize, 0);
-    latestButton = new wxButton(controlPanel, ID_To_Clip, "Copy latest", wxDefaultPosition, buttonSize, 0);
-
+    auto setAreaButton = new wxButton(menuPanel, ID_Area_Setter, "Set area", wxDefaultPosition, buttonSize, 0);
+    auto latestButton = new wxButton(menuPanel, ID_Latest, "Copy latest", wxDefaultPosition, buttonSize, 0);
+    
     setAreaButton->Bind(wxEVT_BUTTON, &ControlPanelFrame::OnArea, this);
-    clipboardButton->Bind(wxEVT_BUTTON, &ControlPanelFrame::OnClip, this);
     latestButton->Bind(wxEVT_BUTTON, &ControlPanelFrame::OnCopy, this);
-
-    wxBoxSizer *buttonSizer = new wxBoxSizer(wxVERTICAL);
+    
+    auto buttonSizer = new wxBoxSizer(wxVERTICAL);
+    // add buttons that should be in the main view 
     buttonSizer->AddSpacer(20);
     buttonSizer->Add(setAreaButton, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
-    buttonSizer->Add(clipboardButton, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
     buttonSizer->Add(latestButton, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
+    menuPanel->SetSizer(buttonSizer);
+    
 
-    controlPanel->SetSizer(buttonSizer);
+    wxWindowID screenshotControlID = wxIdManager::ReserveId(1);
+    auto screenshotPanel = new wxPanel(book);
+    
+    auto clipboardButton = new wxButton(screenshotPanel, ID_To_Clip, "To clipboard", wxDefaultPosition, buttonSize, 0);
+    auto cancel =  new wxButton(screenshotPanel, ID_Cancel, "Cancel", wxDefaultPosition, buttonSize, 0);
+    
+    clipboardButton->Bind(wxEVT_BUTTON, &ControlPanelFrame::OnClip, this);
+    cancel->Bind(wxEVT_BUTTON, &ControlPanelFrame::OnCancel, this);
+    
+    auto screenshotSizer = new wxBoxSizer(wxVERTICAL);
+    screenshotSizer->AddSpacer(20);
+    
+    screenshotSizer->Add(clipboardButton, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
+    screenshotSizer->Add(cancel, 0, wxALIGN_CENTER_HORIZONTAL|wxALL, 2);
+    
+    screenshotPanel->SetSizer(screenshotSizer);
+    screenshotPanel->Hide();
+    
+    book->AddPage(menuPanel, "menu",true);  // Show this page by default
+    book->AddPage(screenshotPanel, "screenShot");
+    //Bind(wxEVT_MENU, &ControlPanelFrame::OnExit, this, wxID_EXIT);
+    //Bind( wxEVT_CLOSE_WINDOW, &ControlPanelFrame::OnExit, this, wxID_EXIT);
+    //Bind(wxEVT_MENU, [this](wxCommandEvent&) { Close(true); }, wxID_EXIT);
+    Bind(wxEVT_CLOSE_WINDOW, &ControlPanelFrame::OnClose, this , wxID_EXIT );
+    
+    
+}
+
+
+ControlPanelFrame::~ControlPanelFrame(){
+    std::cout << "ControlPanelFrame dtor" << std::endl;
+    book->Destroy();
+    std::cout << "ControlPanelFrame dtor exit" << std::endl;
+} 
+
+void ControlPanelFrame::OnClose(wxCloseEvent& event) {
+     std::cout << "exiting" << std::endl;
+    
+    //delete book;
+    //book = nullptr;
+    
+    std::cout << "exited" << std::endl;
+    book->Destroy();
+    Destroy();
+    //Destroy();
+    
 }
 
 void ControlPanelFrame::Set_State(State toState){
@@ -33,47 +83,30 @@ void ControlPanelFrame::Set_State(State toState){
 State ControlPanelFrame::Get_State(){
     return state;
 }
-ControlPanelFrame::~ControlPanelFrame(){
 
-   
-    delete clipboardButton;
-    clipboardButton = nullptr;
-   
-    delete setAreaButton;
-    setAreaButton = nullptr;
-    
-    delete latestButton;
-    latestButton = nullptr;
-    
-    delete controlPanel;
-    controlPanel = nullptr;
-
-}
-int ControlPanelFrame::OnExit()
+void ControlPanelFrame::OnExit(wxEvent& )
 {
     std::cout << "exiting" << std::endl;
-    delete controlPanel;
-    controlPanel = nullptr;
-
-    delete setAreaButton;
-    setAreaButton = nullptr;
     
-    delete clipboardButton;
-    clipboardButton = nullptr;
+    //delete book;
+    //book = nullptr;
     
-    delete latestButton;
-    latestButton = nullptr;
     std::cout << "exited" << std::endl;
-    return 0;
+    Close(true);
+    //Destroy();
     
 }
 
 void ControlPanelFrame::OnArea(wxCommandEvent& event)
 {
+    std::cout << "hiding" << std::endl;
     state = State::STATE_AreaSelect;
-    //wxMessageBox("OnArea button clicked!", "Info", wxOK | wxICON_INFORMATION);
+    previous_selection = book->SetSelection(1);
 }
-
+void ControlPanelFrame::OnCancel(wxCommandEvent& event){
+    state = State::STATE_Cancel;
+    previous_selection = book->SetSelection(previous_selection);
+}
 void ControlPanelFrame::OnClip(wxCommandEvent& event)
 {
     state = State::STATE_ToClipboard;

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project( ImageToText )
-#set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Find wxWidgets
@@ -13,7 +13,7 @@ include(${wxWidgets_USE_FILE})
 endif()
 
 
-add_executable(ScreenshotToText ./src/main.cpp ./src/ControlPanelFrame.cpp ./src/MyFrame.cpp ./src/BasicPane.cpp ./src/BasicButton.cpp)
+add_executable(ScreenshotToText ./src/main.cpp ./src/ControlPanelFrame.cpp ./src/ScreenShotFrame.cpp ./src/BasicPane.cpp) # ./src/ControlPanelFrame.cpp   ./src/BasicButton.cpp)
 
 target_link_libraries(ScreenshotToText -llept -ltesseract) # must add this line to link Tesseract and leptonica libs
 # Link wxWidgets libraries
