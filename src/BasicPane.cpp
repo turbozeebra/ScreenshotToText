@@ -85,9 +85,6 @@ void BasicPane::paintNow()
  * (e.g. wxPaintDC or wxClientDC) is used.
  */
 
-
-
-
 void BasicPane::second_render(wxDC& dc, wxImage img){
     if (rec_to_draw) 
     {
