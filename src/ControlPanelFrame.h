@@ -52,8 +52,7 @@ private:
     void OnArea(wxCommandEvent& event);
     void OnClip(wxCommandEvent& event);
     void OnCopy(wxCommandEvent& event);
-    void OnExit(wxEvent& );
-    void OnClose(wxCloseEvent& event) ;
+
     int previous_selection;
     State state;
     wxSimplebook* book;

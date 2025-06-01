@@ -49,13 +49,7 @@ wxIMPLEMENT_APP(MyApp);
 
 int MyApp::OnExit()
 {
-    //frame_screenshot->Close(true);
-
-    std::cout << "we exiting" << std::endl;
     frame_screenshot->Destroy();
-    std::cout << "now" << std::endl;
-
-
     return 0;
 }
 
@@ -74,14 +68,11 @@ bool MyApp::OnInit() {
         
     screeshot_taken = false;
     pass_once = 0;
-    //Bind(wxEVT_IDLE, &MyApp::OnIdle, this);
     Connect( wxID_ANY, wxEVT_IDLE, wxIdleEventHandler(MyApp::OnIdle) );
-    //SetExitOnFrameDelete(true);
     return true;
 }
  
 void MyApp::initStateHandlers() {
-    std::cout << "handling init" << std::endl;
     stateHandlers = {
         { State::STATE_Select,    [this]() { handleSelect(); } },
         { State::STATE_AreaSelect, [this]() { handleAreaSelect(); } },
@@ -89,7 +80,6 @@ void MyApp::initStateHandlers() {
         { State::STATE_Latest, [this]() { handleLatest(); } },
         { State::STATE_Cancel, [this]() { handleCancel(); } }
     };
-    std::cout << "done" << std::endl;
 }
 
 void MyApp::handleSelect(){
@@ -120,7 +110,6 @@ void MyApp::handleAreaSelect(){
 
         frame_screenshot->ShowFullScreen(true);
         frame_screenshot->Show(true);
-        std::cout << "here" << pass_once<< std::endl;
 
     }
     
@@ -137,8 +126,6 @@ void MyApp::handleAreaSelect(){
 }
 
 void MyApp::handleCancel(){
-    //std::cout << "handling select" << std::endl;
-    //cpFrame->Set_State(State::STATE_Cancel);
     frame_screenshot->Show(false);
     screeshot_taken = false;
     cpFrame->Set_State(State::STATE_Select);
@@ -155,15 +142,11 @@ void MyApp::handleLatest(){
 
 
 void MyApp::OnIdle(wxIdleEvent& evt) {
-    
-   // 
-    // std::cout << int(cpFrame->Get_State()) << std::endl;
+     
     if(cpFrame->IsBeingDeleted()){
-        std::cout << "we trying to idle" << std::endl;
         Exit();
     }
      
-    // std::cout << "name of the top window:" << GetTopWindow()->GetName() << std::endl;
     State current = cpFrame->Get_State();
     
     auto it = stateHandlers.find(cpFrame->Get_State());
@@ -174,19 +157,5 @@ void MyApp::OnIdle(wxIdleEvent& evt) {
         std::cout << "unknown state" << std::endl;
     }
     
-        /*
-        if(cpFrame->IsBeingDeleted()) {
-            closed_flag = true;
-            std::cout << "we got here " << std::endl;
-            //auto did_close = wxGetApp().GetTopWindow()->Close();
-            std::cout << "did it close? " << std::endl;
-            //auto did_close = frame_screenshot->Close(true);
-            Exit();
-            //std::cout << did_close << std::endl;
-            
-        } else {
-            
-    }
-    */
 
 }

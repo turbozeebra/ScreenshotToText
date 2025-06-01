@@ -48,33 +48,13 @@ ControlPanelFrame::ControlPanelFrame(const wxString& title,wxWindowID cpID)
     
     book->AddPage(menuPanel, "menu",true);  // Show this page by default
     book->AddPage(screenshotPanel, "screenShot");
-    //Bind(wxEVT_MENU, &ControlPanelFrame::OnExit, this, wxID_EXIT);
-    //Bind( wxEVT_CLOSE_WINDOW, &ControlPanelFrame::OnExit, this, wxID_EXIT);
-    //Bind(wxEVT_MENU, [this](wxCommandEvent&) { Close(true); }, wxID_EXIT);
-    Bind(wxEVT_CLOSE_WINDOW, &ControlPanelFrame::OnClose, this , wxID_EXIT );
-    
     
 }
 
 
 ControlPanelFrame::~ControlPanelFrame(){
-    std::cout << "ControlPanelFrame dtor" << std::endl;
     book->Destroy();
-    std::cout << "ControlPanelFrame dtor exit" << std::endl;
 } 
-
-void ControlPanelFrame::OnClose(wxCloseEvent& event) {
-     std::cout << "exiting" << std::endl;
-    
-    //delete book;
-    //book = nullptr;
-    
-    std::cout << "exited" << std::endl;
-    book->Destroy();
-    Destroy();
-    //Destroy();
-    
-}
 
 void ControlPanelFrame::Set_State(State toState){
     state=toState;
@@ -84,22 +64,9 @@ State ControlPanelFrame::Get_State(){
     return state;
 }
 
-void ControlPanelFrame::OnExit(wxEvent& )
-{
-    std::cout << "exiting" << std::endl;
-    
-    //delete book;
-    //book = nullptr;
-    
-    std::cout << "exited" << std::endl;
-    Close(true);
-    //Destroy();
-    
-}
 
 void ControlPanelFrame::OnArea(wxCommandEvent& event)
 {
-    std::cout << "hiding" << std::endl;
     state = State::STATE_AreaSelect;
     previous_selection = book->SetSelection(1);
 }

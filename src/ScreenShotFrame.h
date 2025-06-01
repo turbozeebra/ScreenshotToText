@@ -24,18 +24,10 @@ public:
     void update_screen_size(wxSize size);
     
 private:
-    void OnDraw(wxPaintEvent &event);
     void OnPaint(wxPaintEvent& event);
-    void OnExit(wxCloseEvent& event);
-    void OnEraseBackground(wxEraseEvent&);
-
-
-    
-    //wxButton* m_ButtonHello;
     
     BasicPane* drawPane; 
-    //BasicPane* drawPane;
-    BasicButton* button;
+
     wxImage m_image;
     wxPoint startPos;
     int w, h;

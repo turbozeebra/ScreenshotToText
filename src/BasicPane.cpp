@@ -38,7 +38,6 @@ void BasicPane::MouseReleased(wxMouseEvent& event)
     int mouseX = pt.x;
     int mouseY = pt.y;
     updateSquareCoordinates();
-    std::cout << "mouse released" << std::endl;
     mouse_released = true;
     
 }
