@@ -12,11 +12,11 @@
 #include "BasicPane.h"
 #include "BasicButton.h"
 #include <memory>
-class ScreenShotFrame : public wxFrame
+class ScreenshotFrame : public wxFrame
 {
 public:
-    ScreenShotFrame(std::shared_ptr<std::tuple<int, int, int,int>> squareCoordinates,wxWindowID screenshotID);
-    ~ScreenShotFrame();
+    ScreenshotFrame(std::shared_ptr<std::tuple<int, int, int,int>> squareCoordinates,wxWindowID screenshotID);
+    ~ScreenshotFrame();
     void close();
     void update_screenshot(wxImage img);
     bool get_mouse_released();

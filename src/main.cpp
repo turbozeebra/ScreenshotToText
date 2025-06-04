@@ -5,7 +5,7 @@
 #include <wx/clipbrd.h>
 
 #include "ControlPanelFrame.h"
-#include "ScreenShotFrame.h"
+#include "ScreenshotFrame.h"
 
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
@@ -39,7 +39,7 @@ public:
     bool closed_flag=false;
     bool cp_frame_closing=false;
     ControlPanelFrame* m_control_panel_frame;
-    ScreenShotFrame* m_screenshot_frame;
+    ScreenshotFrame* m_screenshot_frame;
     wxBitmap m_bmpBackground;
     wxImage m_screenshot;
     wxWindowID m_screenshotID;
@@ -79,7 +79,7 @@ bool MyApp::OnInit() {
     auto ptr = std::make_shared<std::tuple<int, int, int, int>>(-1, 0, 0, 0);
     m_square_coordinates = ptr;
     m_screenshotID = wxIdManager::ReserveId(1);
-    m_screenshot_frame = new ScreenShotFrame(m_square_coordinates, m_screenshotID);  
+    m_screenshot_frame = new ScreenshotFrame(m_square_coordinates, m_screenshotID);  
         
     screeshot_taken = false;
     pass_once = 0;
@@ -198,8 +198,7 @@ void MyApp::OnIdle(wxIdleEvent& evt) {
 
 }
 
-std::string MyApp::readText(const wxImage subImg) const 
-{
+std::string MyApp::readText(const wxImage subImg) const {
     char *outText;
     tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
     // Initialize tesseract-ocr with English, without specifying tessdata path
@@ -236,8 +235,7 @@ void MyApp::toClipboard(std::string txt){
         }
 }
 
-wxRect* MyApp::normal_rect(const int x, const int y, const int w, const int h) const
-{
+wxRect* MyApp::normal_rect(const int x, const int y, const int w, const int h) const {
     int x1,y1,w1,h1;
     x1 = x;
     y1 = y;
