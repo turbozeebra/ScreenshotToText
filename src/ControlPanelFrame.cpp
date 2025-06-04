@@ -77,6 +77,7 @@ void ControlPanelFrame::OnCancel(wxCommandEvent& event){
 void ControlPanelFrame::OnClip(wxCommandEvent& event)
 {
     state = State::STATE_ToClipboard;
+    previous_selection = book->SetSelection(previous_selection);
     //wxMessageBox("OnClip button clicked!", "Info", wxOK | wxICON_INFORMATION);
 }
 

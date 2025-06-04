@@ -2,9 +2,14 @@
  
 // For compilers that support precompilation, includes "wx/wx.h".
 #include <wx/wx.h>
+#include <wx/clipbrd.h>
 
 #include "ControlPanelFrame.h"
 #include "ScreenShotFrame.h"
+
+#include <tesseract/baseapi.h>
+#include <leptonica/allheaders.h>
+
 enum
 {
    ID_Hello = 1
@@ -25,16 +30,24 @@ public:
     void handleToClipBoard();
     void handleLatest();
     void handleCancel();
+    
+    wxRect* normal_rect(const int x, const int y, const int w, const int h) const;
+    std::string readText(const wxImage subImg) const ;
+    void toClipboard(std::string txt);
 
+ 
     bool closed_flag=false;
-    ControlPanelFrame* cpFrame;
-    ScreenShotFrame* frame_screenshot;
+    bool cp_frame_closing=false;
+    ControlPanelFrame* m_control_panel_frame;
+    ScreenShotFrame* m_screenshot_frame;
     wxBitmap m_bmpBackground;
-    wxImage screenShot;
+    wxImage m_screenshot;
+    wxWindowID m_screenshotID;
 
-    std::shared_ptr<std::tuple<int, int, int,int>> squareCoordinates;
+    std::string ocrTxt;
+    std::shared_ptr<std::tuple<int, int, int,int>> m_square_coordinates;
 
-    std::unordered_map<State, std::function<void()>> stateHandlers;
+    std::unordered_map<State, std::function<void()>> state_handlers;
 
     bool screeshot_taken;
     int pass_once;
@@ -45,11 +58,13 @@ public:
 wxIMPLEMENT_APP(MyApp);
  
 
-
-
 int MyApp::OnExit()
 {
-    frame_screenshot->Destroy();
+    if(cp_frame_closing){
+        m_screenshot_frame->Destroy();
+    } else {
+        m_control_panel_frame->Destroy();
+    }
     return 0;
 }
 
@@ -58,22 +73,24 @@ bool MyApp::OnInit() {
 
     initStateHandlers();
     wxWindowID cpID = wxIdManager::ReserveId(1);
-    cpFrame = new ControlPanelFrame("Control Panel", cpID);
-    cpFrame->Show(true);
+    m_control_panel_frame = new ControlPanelFrame("Control Panel", cpID);
+    m_control_panel_frame->Show(true);
 
     auto ptr = std::make_shared<std::tuple<int, int, int, int>>(-1, 0, 0, 0);
-    squareCoordinates = ptr;
-    wxWindowID screenshotID = wxIdManager::ReserveId(1);
-    frame_screenshot = new ScreenShotFrame(squareCoordinates, screenshotID);  
+    m_square_coordinates = ptr;
+    m_screenshotID = wxIdManager::ReserveId(1);
+    m_screenshot_frame = new ScreenShotFrame(m_square_coordinates, m_screenshotID);  
         
     screeshot_taken = false;
     pass_once = 0;
     Connect( wxID_ANY, wxEVT_IDLE, wxIdleEventHandler(MyApp::OnIdle) );
+
+    wxImage::AddHandler(new wxPNGHandler());
     return true;
 }
  
 void MyApp::initStateHandlers() {
-    stateHandlers = {
+    state_handlers = {
         { State::STATE_Select,    [this]() { handleSelect(); } },
         { State::STATE_AreaSelect, [this]() { handleAreaSelect(); } },
         { State::STATE_ToClipboard, [this]() { handleToClipBoard(); } },
@@ -84,78 +101,160 @@ void MyApp::initStateHandlers() {
 
 void MyApp::handleSelect(){
     //std::cout << "handling select" << std::endl;
-    cpFrame->Set_State(State::STATE_Select);
+    m_control_panel_frame->Set_State(State::STATE_Select);
 }
 
 void MyApp::handleAreaSelect(){
-   //std::cout << "handling area select" << std::endl;
-   if(!screeshot_taken) {
-        cpFrame->Show(false);
-        wxScreenDC dc;
-        wxSize size = dc.GetSize();
-        frame_screenshot->update_screen_size(size);
-        wxBitmap bmp(size.x, size.y);
-        wxMemoryDC memDC(bmp);
-        memDC.Blit(0, 0, size.x, size.y, &dc, 0, 0);
-        memDC.SelectObject(wxNullBitmap);
-        screenShot = bmp.ConvertToImage();
-        //wxInitAllImageHandlers();
-        wxImage::AddHandler(new wxPNGHandler());
-        //img.SaveFile("./test.png", wxBITMAP_TYPE_PNG); this is how you save an image
-        wxCoord w, h;
-        dc.GetSize(&w, &h);
-        // these are the coordinates that are going to be used to determine wanted area of the screen
-        frame_screenshot->update_screenshot(screenShot); 
-        screeshot_taken = true;
+   
+    if (!m_screenshot_frame->IsBeingDeleted() && !m_control_panel_frame->IsBeingDeleted()){
+        if(!screeshot_taken) {
+            wxScreenDC dc;
+            wxSize size = dc.GetSize();
+            m_screenshot_frame->update_screen_size(size);
+            wxBitmap bmp(size.x, size.y);
+            wxMemoryDC memDC(bmp);
+            memDC.Blit(0, 0, size.x, size.y, &dc, 0, 0);
+            memDC.SelectObject(wxNullBitmap);
+            m_screenshot = bmp.ConvertToImage();
+            // this is how you save an image
+            //img.SaveFile("./test.png", wxBITMAP_TYPE_PNG); this is how you save an image
+            // these are the coordinates that are going to be used to determine wanted area of the screen
+            m_screenshot_frame->update_screenshot(m_screenshot); 
+            screeshot_taken = true;
 
-        frame_screenshot->ShowFullScreen(true);
-        frame_screenshot->Show(true);
+            m_screenshot_frame->ShowFullScreen(true);
+            m_screenshot_frame->Show(true);
+            m_control_panel_frame->Show(true);
 
-    }
-    
-    if(screeshot_taken && frame_screenshot->get_mouse_released()){
-    //    frame_screenshot->ShowFullScreen(true);
-        frame_screenshot->Show(true);
-        cpFrame->Show(true);
-        cpFrame->Raise();
-    } 
-    if (!frame_screenshot->get_mouse_released()) {
-        frame_screenshot->render();
-        frame_screenshot->Show(true);
-    }
+        }
+        
+        if(screeshot_taken && m_screenshot_frame->get_mouse_released()){
+            m_screenshot_frame->Show(true);
+            m_control_panel_frame->Show(true);
+            m_control_panel_frame->Raise();
+        } 
+        if (!m_screenshot_frame->get_mouse_released()) {
+            m_screenshot_frame->render();
+            m_screenshot_frame->Show(true);
+        }
+   }
 }
 
 void MyApp::handleCancel(){
-    frame_screenshot->Show(false);
+    m_screenshot_frame->Show(false);
     screeshot_taken = false;
-    cpFrame->Set_State(State::STATE_Select);
+    m_control_panel_frame->Set_State(State::STATE_Select);
 }
 
 void MyApp::handleToClipBoard(){
-    std::cout << "handling ToClipBoard" << std::endl;
-    cpFrame->Set_State(State::STATE_Select);
+    screeshot_taken = false;
+    m_screenshot_frame->Show(false);
+
+    wxRect *rect = normal_rect(std::get<0>(*m_square_coordinates),std::get<1>(*m_square_coordinates),std::get<2>(*m_square_coordinates),std::get<3>(*m_square_coordinates));
+    if(rect->GetX() > -1)
+    {
+        wxImage subImg = m_screenshot.GetSubImage(*rect); 
+
+        ocrTxt =  readText(subImg);
+        
+        toClipboard(ocrTxt);
+        // Write some text to the clipboard
+        
+    }
+    m_control_panel_frame->Set_State(State::STATE_Select);
 }
 void MyApp::handleLatest(){
-    std::cout << "handling latest" << std::endl;
-    cpFrame->Set_State(State::STATE_Select);
+    
+    if (!ocrTxt.empty()){
+        toClipboard(ocrTxt);
+    }
+    
+    m_control_panel_frame->Set_State(State::STATE_Select);
 }
 
 
 void MyApp::OnIdle(wxIdleEvent& evt) {
      
-    if(cpFrame->IsBeingDeleted()){
+    if(m_control_panel_frame->IsBeingDeleted()){
+        cp_frame_closing = true;
+        Exit();
+    }
+
+     if(m_screenshot_frame->IsBeingDeleted()){
+        cp_frame_closing = false;
         Exit();
     }
      
-    State current = cpFrame->Get_State();
+    State current = m_control_panel_frame->Get_State();
     
-    auto it = stateHandlers.find(cpFrame->Get_State());
+    auto it = state_handlers.find(m_control_panel_frame->Get_State());
     
-    if (it != stateHandlers.end()) {
+    if (it != state_handlers.end()) {
         it->second();
     } else {
         std::cout << "unknown state" << std::endl;
     }
     
 
+}
+
+std::string MyApp::readText(const wxImage subImg) const 
+{
+    char *outText;
+    tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
+    // Initialize tesseract-ocr with English, without specifying tessdata path
+    if (api->Init(NULL, "eng")) 
+    {
+        fprintf(stderr, "Could not initialize tesseract.\n");
+        exit(1);
+    }
+    int width = subImg.GetWidth();
+    int height = subImg.GetHeight();
+    const unsigned char* rgb_buffer = subImg.GetData(); 
+    api->SetImage(rgb_buffer, width, height, 3, width * 3);
+    
+    // Get OCR result
+    outText = api->GetUTF8Text();
+    //printf("%s", outText);
+
+    // Destroy used object and release memory
+    
+    api->End();
+    delete api;
+    std::string str(outText);
+    return std::move(str);
+    
+}
+void MyApp::toClipboard(std::string txt){
+    if (wxTheClipboard->Open())
+        {
+            // This data objects are held by the clipboard,
+            // so do not delete them in the app.
+            wxTheClipboard->SetData( new wxTextDataObject(txt.c_str()) );
+            // wxTheClipboard->Flush();
+            wxTheClipboard->Close();
+        }
+}
+
+wxRect* MyApp::normal_rect(const int x, const int y, const int w, const int h) const
+{
+    int x1,y1,w1,h1;
+    x1 = x;
+    y1 = y;
+    w1 = w;
+    h1 = h;
+
+    if(w < 0 )
+    {
+        x1 += w;
+        w1 = std::abs(w);
+    }
+
+    if(h < 0)
+    {
+        y1 += h;
+        h1 = std::abs(h);
+    }
+
+    return new wxRect(x1,y1,w1,h1);
 }
