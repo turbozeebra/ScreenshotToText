@@ -14,27 +14,27 @@
 #include <memory>
 class ScreenshotFrame : public wxFrame {
 public:
-  ScreenshotFrame(
-      std::shared_ptr<std::tuple<int, int, int, int>> squareCoordinates,
-      wxWindowID screenshotID);
-  ~ScreenshotFrame();
-  void close();
-  void update_screenshot(wxImage img);
-  bool get_mouse_released();
-  void render();
-  void update_screen_size(wxSize size);
+    ScreenshotFrame(
+        std::shared_ptr<std::tuple<int, int, int, int>> squareCoordinates,
+        wxWindowID screenshotID);
+    ~ScreenshotFrame();
+    void close();
+    void update_screenshot(wxImage img);
+    bool get_mouse_released();
+    void render();
+    void update_screen_size(wxSize size);
 
 private:
-  void OnPaint(wxPaintEvent &event);
+    void OnPaint(wxPaintEvent &event);
 
-  BasicPane *drawPane;
+    BasicPane *drawPane;
 
-  wxImage m_image;
-  wxPoint startPos;
-  int w, h;
-  bool rec_to_draw;
-  std::shared_ptr<std::tuple<int, int, int, int>> squareCoordinates;
-  void setStartPos(const wxPoint sp) noexcept { startPos = sp; }
+    wxImage m_image;
+    wxPoint startPos;
+    int w, h;
+    bool rec_to_draw;
+    std::shared_ptr<std::tuple<int, int, int, int>> squareCoordinates;
+    void setStartPos(const wxPoint sp) noexcept { startPos = sp; }
 };
 
 #endif // SCREENSHOTFRAME_H

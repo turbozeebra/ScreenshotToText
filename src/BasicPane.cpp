@@ -1,7 +1,9 @@
 #include "BasicPane.h"
 
-BasicPane::BasicPane(wxFrame *parent, std::shared_ptr<std::tuple<int, int, int, int>> squareCoordinates) : wxPanel(parent), squareCoordinates(squareCoordinates)
-{
+BasicPane::BasicPane(
+    wxFrame *parent,
+    std::shared_ptr<std::tuple<int, int, int, int>> squareCoordinates)
+    : wxPanel(parent), squareCoordinates(squareCoordinates) {
     rec_to_draw = false;
     mouse_released = false;
 
@@ -11,31 +13,22 @@ BasicPane::BasicPane(wxFrame *parent, std::shared_ptr<std::tuple<int, int, int, 
     Bind(wxEVT_PAINT, &BasicPane::paintEvent, this);
 }
 
-void BasicPane::update_screen_size(wxSize size)
-{
-    screen_size = size;
-}
+void BasicPane::update_screen_size(wxSize size) { screen_size = size; }
 
-bool BasicPane::get_mouse_released()
-{
-    return mouse_released;
-}
-void BasicPane::paintEvent(wxPaintEvent &evt)
-{
+bool BasicPane::get_mouse_released() { return mouse_released; }
+void BasicPane::paintEvent(wxPaintEvent &evt) {
     wxPaintDC dc(this);
     render(dc);
 }
 
-void BasicPane::MouseReleased(wxMouseEvent &event)
-{
+void BasicPane::MouseReleased(wxMouseEvent &event) {
     wxPoint pt = wxGetMousePosition();
     int mouseX = pt.x;
     int mouseY = pt.y;
     updateSquareCoordinates();
     mouse_released = true;
 }
-void BasicPane::updateSquareCoordinates()
-{
+void BasicPane::updateSquareCoordinates() {
 
     std::get<0>(*squareCoordinates) = int(startPos.x);
     std::get<1>(*squareCoordinates) = int(startPos.y);
@@ -43,8 +36,7 @@ void BasicPane::updateSquareCoordinates()
     std::get<3>(*squareCoordinates) = int(h);
 }
 
-void BasicPane::MousePressed(wxMouseEvent &event)
-{
+void BasicPane::MousePressed(wxMouseEvent &event) {
     bitmap_old_initialized = false;
     rec_to_draw = false;
     wxPoint pt = wxGetMousePosition();
@@ -52,29 +44,27 @@ void BasicPane::MousePressed(wxMouseEvent &event)
     mouse_released = false;
 }
 
-void BasicPane::paintNow()
-{
+void BasicPane::paintNow() {
     wxClientDC dc(this);
     render(dc);
 }
 
-void BasicPane::second_render(wxDC &dc, wxImage img)
-{
-    if (rec_to_draw)
-    {
+void BasicPane::second_render(wxDC &dc, wxImage img) {
+    if (rec_to_draw) {
         wxRect red_square = normal_rect(startPos.x, startPos.y, w, h);
         int difference = 10;
 
-        wxRect image_square = wxRect(red_square.x - difference, red_square.y - difference, red_square.width + 2 * difference, red_square.height + 2 * difference);
+        wxRect image_square =
+            wxRect(red_square.x - difference, red_square.y - difference,
+                   red_square.width + 2 * difference,
+                   red_square.height + 2 * difference);
 
         int area = red_square.height * red_square.width;
-        if (area > 10)
-        {
+        if (area > 10) {
 
             m_subImage = std::move(img.GetSubImage(image_square));
             wxBitmap bitmap_rec(m_subImage);
-            if (!bitmap_old_initialized)
-            {
+            if (!bitmap_old_initialized) {
                 bitmap_old = bitmap_rec;
                 bitmap_old_initialized = true;
                 x_old = image_square.x;
@@ -92,12 +82,12 @@ void BasicPane::second_render(wxDC &dc, wxImage img)
     }
 }
 
-void BasicPane::render(wxDC &dc)
-{
+void BasicPane::render(wxDC &dc) {
 
-    if (rec_to_draw)
-    {
-        wxRect rect = normal_rect(std::get<0>(*squareCoordinates), std::get<1>(*squareCoordinates), std::get<2>(*squareCoordinates), std::get<3>(*squareCoordinates));
+    if (rec_to_draw) {
+        wxRect rect = normal_rect(
+            std::get<0>(*squareCoordinates), std::get<1>(*squareCoordinates),
+            std::get<2>(*squareCoordinates), std::get<3>(*squareCoordinates));
 
         dc.SetPen(*wxRED);
         dc.SetBrush(*wxTRANSPARENT_BRUSH);
@@ -105,36 +95,31 @@ void BasicPane::render(wxDC &dc)
     }
 }
 
-void BasicPane::OnMotion(wxMouseEvent &event)
-{
-    if (event.Dragging())
-    {
+void BasicPane::OnMotion(wxMouseEvent &event) {
+    if (event.Dragging()) {
         rec_to_draw = true;
         const wxPoint current = event.GetPosition();
-        if (current.x > 10 && current.x < (screen_size.x - 10) && current.y > 10 && current.y < (screen_size.y - 10))
-        {
+        if (current.x > 10 && current.x < (screen_size.x - 10) &&
+            current.y > 10 && current.y < (screen_size.y - 10)) {
             w = current.x - startPos.x;
             h = current.y - startPos.y;
         }
     }
 }
 
-wxRect BasicPane::normal_rect(int x, int y, int w, int h) const
-{
+wxRect BasicPane::normal_rect(int x, int y, int w, int h) const {
     int x1, y1, w1, h1;
     x1 = x;
     y1 = y;
     w1 = w;
     h1 = h;
 
-    if (w < 0)
-    {
+    if (w < 0) {
         x1 += w;
         w1 = std::abs(w);
     }
 
-    if (h < 0)
-    {
+    if (h < 0) {
         y1 += h;
         h1 = std::abs(h);
     }
