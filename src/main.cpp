@@ -101,7 +101,7 @@ void MyApp::handleAreaSelect() {
             m_control_panel_frame->Hide();
             m_control_panel_frame->Refresh();
             m_screenshot_frame->Refresh();
-            std::this_thread::sleep_for(std::chrono::milliseconds(160));
+            std::this_thread::sleep_for(std::chrono::milliseconds(180));
             wxScreenDC dc;
             wxSize size = dc.GetSize();
             m_screenshot_frame->update_screen_size(size);
