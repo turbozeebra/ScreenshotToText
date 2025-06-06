@@ -36,3 +36,4 @@ libs/*
 .vscode/*
 src/main_old.cpp
 .editorconfig
+.clang-format
